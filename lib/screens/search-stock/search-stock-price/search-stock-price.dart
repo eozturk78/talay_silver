@@ -35,7 +35,7 @@ class SearchStockState extends State<SearchStockScreen> {
     super.reassemble();
     if (Platform.isAndroid) {
       controller!.pauseCamera();
-    }else if(Platform.isIOS){
+    } else if (Platform.isIOS) {
       controller!.resumeCamera();
     }
   }
@@ -49,11 +49,11 @@ class SearchStockState extends State<SearchStockScreen> {
   }
 
   startCamera() async {
-    print("run again");
     if (Platform.isAndroid) {
       await controller!.pauseCamera();
-    }else if(Platform.isIOS){
-     await controller!.resumeCamera();
+    } else if (Platform.isIOS) {
+      print("run again ------");
+      await controller!.resumeCamera();
     }
   }
 
@@ -75,10 +75,6 @@ class SearchStockState extends State<SearchStockScreen> {
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
             color: Colors.white,
           ),
           child: Column(
@@ -153,14 +149,12 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );
       } else if (pref.getString("redirectPage") == "basket") {
         await apis.getStockBasketPrice(pref.getString("basketId"), code).then(
           (value) {
-            print(jsonEncode(value));
             pref.setString('stockInfo', jsonEncode(value));
             if (!isRedirected) {
               Navigator.push(
@@ -172,7 +166,6 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );
@@ -190,7 +183,6 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );

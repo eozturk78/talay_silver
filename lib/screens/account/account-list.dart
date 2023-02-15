@@ -62,18 +62,19 @@ class AccountListState extends State<AccountListScreen> {
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Cari Listesi"),
-          leading: leadingWithBack(context),
-          shadowColor: null,
-          elevation: 0.0,
-          bottomOpacity: 0,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-          actions: headerAction(context),
-        ),
-        backgroundColor: splashBackGroundColor,
-        body: Column(
+      appBar: AppBar(
+        title: Text("Cari Listesi"),
+        leading: leadingWithBack(context),
+        shadowColor: null,
+        elevation: 0.0,
+        bottomOpacity: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        actions: headerAction(context),
+      ),
+      backgroundColor: splashBackGroundColor,
+      body: SingleChildScrollView(
+        child: Column(
           children: [
             Container(
               width: double.infinity,
@@ -225,6 +226,8 @@ class AccountListState extends State<AccountListScreen> {
               ),
             ),
           ],
-        ));
+        ),
+      ),
+    );
   }
 }

@@ -16,6 +16,7 @@ import '../../model/currency.dart';
 import '../../model/header.dart';
 import '../../shared/shared.dart';
 import '../../style-model/style-model.dart';
+import '../../toast.dart';
 import '../search-stock/search-stock-price/search-stock-price.dart';
 
 class BasketDetailScreen extends StatefulWidget {
@@ -748,6 +749,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                             .sendBasketToWaiting(pref.getString("basketId"),
                                 _sendType == 20, grossWeightValue)
                             .then((value) {
+                          showToast("Sepet başarıyla gönderildi");
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => MenuScreen()));
                         });
