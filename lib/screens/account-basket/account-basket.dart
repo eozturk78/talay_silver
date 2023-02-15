@@ -38,6 +38,7 @@ class AccountBasketState extends State<AccountBasketScreen> {
     api.getCustomerBasketList(pref.getString("accountId")).then((value) {
       setState(() {
         loader = false;
+        print(value);
         if (value != null) {
           basketList = (value as List).map((e) => Basket.formJson(e)).toList();
         }

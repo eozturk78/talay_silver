@@ -32,10 +32,11 @@ class SearchStockState extends State<SearchStockScreen> {
   @override
   void reassemble() {
     super.reassemble();
-    /* if (Platform.isAndroid) {
+    if (Platform.isAndroid) {
       controller!.pauseCamera();
-    }*/
-    //controller!.resumeCamera();
+    } else if (Platform.isIOS) {
+      controller!.resumeCamera();
+    }
   }
 
   @override
@@ -47,8 +48,12 @@ class SearchStockState extends State<SearchStockScreen> {
   }
 
   startCamera() async {
-    print("start camera");
-    await controller?.resumeCamera();
+    if (Platform.isAndroid) {
+      await controller!.pauseCamera();
+    } else if (Platform.isIOS) {
+      print("run again ------");
+      await controller!.resumeCamera();
+    }
   }
 
   @override
@@ -69,10 +74,6 @@ class SearchStockState extends State<SearchStockScreen> {
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
             color: Colors.white,
           ),
           child: Column(
@@ -94,7 +95,6 @@ class SearchStockState extends State<SearchStockScreen> {
   }
 
   Widget _buildQrView(BuildContext context) {
-    print("start to get camera");
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     var scanArea = (MediaQuery.of(context).size.width < 400 ||
             MediaQuery.of(context).size.height < 400)
@@ -116,16 +116,15 @@ class SearchStockState extends State<SearchStockScreen> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-      startCamera();
-    });
+    this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         result = scanData;
         getStockInfo();
       });
     });
+    controller.pauseCamera();
+    controller.resumeCamera();
   }
 
   getStockInfo() async {
@@ -149,14 +148,12 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );
       } else if (pref.getString("redirectPage") == "basket") {
         await apis.getStockBasketPrice(pref.getString("basketId"), code).then(
           (value) {
-            print(jsonEncode(value));
             pref.setString('stockInfo', jsonEncode(value));
             if (!isRedirected) {
               Navigator.push(
@@ -168,7 +165,6 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );
@@ -186,7 +182,6 @@ class SearchStockState extends State<SearchStockScreen> {
                 startCamera();
               });
               isRedirected = true;
-              controller?.stopCamera();
             }
           },
         );

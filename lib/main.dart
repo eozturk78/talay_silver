@@ -31,8 +31,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color.fromARGB(255, 32, 141, 230)
+            ),
         // is not restarted.
-        primarySwatch: Colors.blue,
       ),
       initialRoute: "/",
       routes: {

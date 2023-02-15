@@ -3,8 +3,8 @@ import 'package:talay_mobile/model/city.dart';
 class Country {
   final String CountryId;
   final String CountryName;
-  final String CountryCode;
-  final String AreaCode;
+  final String? CountryCode;
+  final String? AreaCode;
   List<City>? Cities;
 
   Country(
