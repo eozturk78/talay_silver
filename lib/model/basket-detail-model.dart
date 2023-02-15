@@ -8,11 +8,11 @@ class BasketDetailModel {
   final String BasketNo;
   final String UserTitle;
   final String CurrencyId;
-   double? TotalItemCount;
-   double? TotalGrossWeight;
-   double? TotalTareWeight;
-   double? TotalNetWeight;
-   int? LastItemIndex;
+  final double TotalItemCount;
+  final double TotalGrossWeight;
+  final double TotalTareWeight;
+  final double TotalNetWeight;
+  final int LastItemIndex;
   final int BasketStatus;
   final String BasketStatusDesc;
   final String PriceType;
@@ -23,10 +23,10 @@ class BasketDetailModel {
     required this.UserTitle,
     required this.CurrencyId,
     required this.TotalItemCount,
-     this.TotalGrossWeight,
-     this.TotalTareWeight,
-     this.TotalNetWeight,
-     this.LastItemIndex,
+    required this.TotalGrossWeight,
+    required this.TotalTareWeight,
+    required this.TotalNetWeight,
+    required this.LastItemIndex,
     required this.BasketStatus,
     required this.BasketStatusDesc,
     required this.PriceType,

@@ -5,15 +5,15 @@ class BasketRow {
   final int OrderIndex;
   final String StockCode;
   final String StockName;
-  final String? StockImage;
+  final String StockImage;
   int? OfferCarat;
   double? OfferUnitPrice;
   final int Carat;
   final double UnitPrice;
-  double? Quantity;
-  final double? GrossWeight;
-  final double? TareWeight;
-  final double? NetWeight;
+  double Quantity;
+  final double GrossWeight;
+  final double TareWeight;
+  final double NetWeight;
   final List<DetailedDare>? DetailedTare;
   BasketRow(
       {required this.BasketDetailId,

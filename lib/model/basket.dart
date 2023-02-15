@@ -3,24 +3,24 @@ class Basket {
   final String BasketNo;
   final String UserTitle;
   final String Currency;
-   double? TotalItemCount;
-   double? TotalGrossWeight;
-   double? TotalTareWeight;
-   double? TotalNetWeight;
+  final double TotalItemCount;
+  final double TotalGrossWeight;
+  final double TotalTareWeight;
+  final double TotalNetWeight;
   final int LastItemIndex;
   final int BasketStatus;
   final String BasketStatusDesc;
   final bool AllowUse;
 
-   Basket(
+  const Basket(
       {required this.BasketId,
       required this.BasketNo,
       required this.UserTitle,
       required this.Currency,
-       this.TotalItemCount,
-       this.TotalGrossWeight,
-       this.TotalTareWeight,
-       this.TotalNetWeight,
+      required this.TotalItemCount,
+      required this.TotalGrossWeight,
+      required this.TotalTareWeight,
+      required this.TotalNetWeight,
       required this.LastItemIndex,
       required this.BasketStatus,
       required this.BasketStatusDesc,

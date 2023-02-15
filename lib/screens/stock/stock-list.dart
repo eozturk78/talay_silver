@@ -12,15 +12,18 @@ import 'package:talay_mobile/screens/stock/stock-price-analyse.dart';
 import 'package:talay_mobile/shared/shared.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:talay_mobile/apis/apis.dart';
+
 import '../../model/file.dart';
 import '../../model/stock-list.dart';
 import '../../style-model/style-model.dart';
 import '../stock-basket/stock-basket-detail.dart';
+
 class StockListScreen extends StatefulWidget {
   const StockListScreen({Key? key}) : super(key: key);
   @override
   StockListScreenState createState() => StockListScreenState();
 }
+
 class StockListScreenState extends State<StockListScreen> {
   bool remeberMeState = false;
   final _formKey = GlobalKey<FormState>();

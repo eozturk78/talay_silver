@@ -49,7 +49,7 @@ class SearchAccountDetailedState extends State<SearchAccountDetailedScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Detaylı Cari Arama"),
-        leading: leadingWithBack(context),
+        leading: leading(context),
         shadowColor: null,
         elevation: 0.0,
         bottomOpacity: 0,
@@ -68,106 +68,104 @@ class SearchAccountDetailedState extends State<SearchAccountDetailedScreen> {
           ),
           color: Colors.white,
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-              padding: EdgeInsets.all(30.0),
-              child: Center(
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: searchAccount,
-                      obscureText: false,
-                      decoration: const InputDecoration(
-                        labelText:
-                            'Aramak için, cari ünvanına göre birşeyler yaz',
-                      ),
+        child: Padding(
+            padding: EdgeInsets.all(30.0),
+            child: Center(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: searchAccount,
+                    obscureText: false,
+                    decoration: const InputDecoration(
+                      labelText:
+                          'Aramak için, cari ünvanına göre birşeyler yaz',
                     ),
-                    SizedBox(
-                      height: 15,
-                    ),
-                    DropdownButton<Country>(
-                      isExpanded: true,
-                      hint: const Text("Ülke"),
-                      items: countries?.map((e) {
-                        return DropdownMenuItem<Country>(
-                          value: e,
-                          child: Text(e.CountryName),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCountry = value;
-                        });
-                      },
-                      value: _selectedCountry,
-                    ),
-                    SizedBox(
-                      height: 15,
-                    ),
-                    DropdownButton<City>(
-                      isExpanded: true,
-                      hint: const Text("Şehir"),
-                      items: _selectedCountry?.Cities?.map((e) {
-                        return DropdownMenuItem<City>(
-                          value: e,
-                          child: Text(e.CityName),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCity = value;
-                        });
-                      },
-                      value: _selectedCity,
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        SharedPreferences pref =
-                            await SharedPreferences.getInstance();
-                        pref.setString("searchText", searchAccount.text);
-                        if (_selectedCountry != null) {
-                          pref.setString(
-                              "countryId", _selectedCountry!.CountryId);
-                        }
-                        if (_selectedCity != null) {
-                          pref.setString("cityId", _selectedCity!.CityId);
-                        }
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  DropdownButton<Country>(
+                    isExpanded: true,
+                    hint: const Text("Ülke"),
+                    items: countries?.map((e) {
+                      return DropdownMenuItem<Country>(
+                        value: e,
+                        child: Text(e.CountryName),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCountry = value;
+                      });
+                    },
+                    value: _selectedCountry,
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  DropdownButton<City>(
+                    isExpanded: true,
+                    hint: const Text("Şehir"),
+                    items: _selectedCountry?.Cities?.map((e) {
+                      return DropdownMenuItem<City>(
+                        value: e,
+                        child: Text(e.CityName),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCity = value;
+                      });
+                    },
+                    value: _selectedCity,
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      SharedPreferences pref =
+                          await SharedPreferences.getInstance();
+                      pref.setString("searchText", searchAccount.text);
+                      if (_selectedCountry != null) {
+                        pref.setString(
+                            "countryId", _selectedCountry!.CountryId);
+                      }
+                      if (_selectedCity != null) {
+                        pref.setString("cityId", _selectedCity!.CityId);
+                      }
 
-                        // ignore: use_build_context_synchronously
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) =>
-                                    const AccountListScreen(null))));
-                      },
-                      child: Text("Ara"),
-                      style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(40)),
-                    ),
-                    SizedBox(
-                      height: 60,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // ignore: use_build_context_synchronously
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) =>
-                                    const NewAccountScreen(null))));
-                      },
-                      child: Text("Yeni Müşteri Adayı"),
-                      style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(40),
-                          backgroundColor: Colors.red),
-                    ),
-                  ],
-                ),
-              )),
-        ),
+                      // ignore: use_build_context_synchronously
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) =>
+                                  const AccountListScreen(null))));
+                    },
+                    child: Text("Ara"),
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(40)),
+                  ),
+                  SizedBox(
+                    height: 60,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // ignore: use_build_context_synchronously
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) =>
+                                  const NewAccountScreen(null))));
+                    },
+                    child: Text("Yeni Müşteri Adayı"),
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(40),
+                        backgroundColor: Colors.red),
+                  ),
+                ],
+              ),
+            )),
       ),
     );
   }

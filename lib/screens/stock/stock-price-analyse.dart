@@ -5,9 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/colors/constant_colors.dart';
 import 'package:talay_mobile/model/currency.dart';
 import 'package:talay_mobile/model/header.dart';
+import 'package:talay_mobile/model/price-type.dart';
+import 'package:talay_mobile/model/stock-detail.dart';
 import 'package:talay_mobile/model/stock-price-analyse.dart';
 import 'package:talay_mobile/shared/shared.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:talay_mobile/apis/apis.dart';
+
 import '../../model/file.dart';
 import '../../style-model/style-model.dart';
 

@@ -6,7 +6,6 @@ import 'package:talay_mobile/model/account.dart';
 import 'package:talay_mobile/screens/account-basket/account-basket.dart';
 import 'package:talay_mobile/screens/account/search-account-detailed.dart';
 import 'package:talay_mobile/style-model/style-model.dart';
-
 import '../../colors/constant_colors.dart';
 import '../../model/header.dart';
 import 'new-account.dart';
@@ -62,19 +61,18 @@ class AccountListState extends State<AccountListScreen> {
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Cari Listesi"),
-        leading: leadingWithBack(context),
-        shadowColor: null,
-        elevation: 0.0,
-        bottomOpacity: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        actions: headerAction(context),
-      ),
-      backgroundColor: splashBackGroundColor,
-      body: SingleChildScrollView(
-        child: Column(
+        appBar: AppBar(
+          title: Text("Cari Listesi"),
+          leading: leadingWithBack(context),
+          shadowColor: null,
+          elevation: 0.0,
+          bottomOpacity: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          actions: headerAction(context),
+        ),
+        backgroundColor: splashBackGroundColor,
+        body: Column(
           children: [
             Container(
               width: double.infinity,
@@ -226,8 +224,6 @@ class AccountListState extends State<AccountListScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
+        ));
   }
 }
