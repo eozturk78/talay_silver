@@ -260,8 +260,8 @@ class Apis {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var params = {
       "BasketDetailId": basketDetailId,
-      "OfferCarat": caratOffer,
-      "OfferUnitPrice": priceOffer
+      "OfferCarat": caratOffer != "" ? caratOffer : null,
+      "OfferUnitPrice": priceOffer != "" ? priceOffer : null
     };
     String finalUrl = '$baseUrl/$serviceName/SetBasketDetailOfferValues';
     var result = await http

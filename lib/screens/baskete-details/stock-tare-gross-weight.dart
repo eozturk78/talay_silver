@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/apis/apis.dart';
@@ -161,6 +162,10 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                 ),
                 TextFormField(
                   keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                   controller: quantityController,
                   obscureText: false,
                   decoration: const InputDecoration(
@@ -168,7 +173,10 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                   ),
                 ),
                 TextFormField(
-                  keyboardType: TextInputType.number,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                  ],
                   controller: grossController,
                   onChanged: (value) {
                     setState(() {
@@ -225,7 +233,11 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                 ),
                 if (_tareType == 10)
                   TextFormField(
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                    ],
                     controller: tareContoller,
                     onChanged: (value) {
                       setState(() {
@@ -247,6 +259,8 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                       GestureDetector(
                         onTap: () {
                           setState(() {
+                            detailedWeightController.clear();
+                            detailedQuantityController.clear();
                             showDialog(
                               context: context,
                               builder: (context) =>
@@ -367,7 +381,11 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                   children: [
                     TextFormField(
                       controller: detailedWeightController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                      ],
                       obscureText: false,
                       decoration: const InputDecoration(
                         labelText: 'Paket Ağırlığı',
@@ -380,6 +398,10 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                     TextFormField(
                       controller: detailedQuantityController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
                       obscureText: false,
                       decoration: const InputDecoration(
                         labelText: 'Adet',
@@ -415,7 +437,7 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                           Navigator.of(context, rootNavigator: true)
                               .pop('dialog');
                         },
-                        child: Text('Güncelle'))
+                        child: Text('Ekle'))
                   ],
                 ),
               ));

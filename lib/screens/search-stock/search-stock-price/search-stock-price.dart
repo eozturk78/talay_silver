@@ -48,12 +48,7 @@ class SearchStockState extends State<SearchStockScreen> {
   }
 
   startCamera() async {
-    if (Platform.isAndroid) {
-      await controller!.pauseCamera();
-    } else if (Platform.isIOS) {
-      print("run again ------");
-      await controller!.resumeCamera();
-    }
+    await controller?.resumeCamera();
   }
 
   @override

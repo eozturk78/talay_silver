@@ -1,20 +1,17 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/colors/constant_colors.dart';
 import 'package:talay_mobile/model/basket-price.dart';
 import 'package:talay_mobile/model/currency.dart';
 import 'package:talay_mobile/model/header.dart';
 import 'package:talay_mobile/model/offer.dart';
-import 'package:talay_mobile/model/price-type.dart';
 import 'package:talay_mobile/model/stock-basket-detail.dart';
-import 'package:talay_mobile/model/stock-detail.dart';
 import 'package:talay_mobile/model/stock-variants.dart';
 import 'package:talay_mobile/screens/baskete-details/basket-detail.dart';
-import 'package:talay_mobile/screens/stock-varyants/stock-varyants.dart';
 import 'package:talay_mobile/shared/shared.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:talay_mobile/apis/apis.dart';
 
 import '../../model/file.dart';
@@ -110,130 +107,55 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                                       vertical: 15, horizontal: 60),
                                   child: Column(
                                     children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            offerPrice.value =
-                                                offerPrice.value.copyWith(
-                                              text:
-                                                  basketPrice?.Price.toString(),
-                                              selection:
-                                                  TextSelection.collapsed(
-                                                      offset: 6),
-                                            );
-                                            offerCarat.value =
-                                                offerCarat.value.copyWith(
-                                              text:
-                                                  basketPrice?.Carat.toString(),
-                                              selection:
-                                                  TextSelection.collapsed(
-                                                      offset: 6),
-                                            );
-                                          });
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                updateCaratAndUniitPrice(
-                                                    context),
-                                          ).then(
-                                            (value) => setState(
-                                              () {},
-                                            ),
-                                          );
-                                        },
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              '${basketPrice?.Price} ${stockDetail!.Currency.Symbol}',
-                                              style: priceText,
-                                            ),
-                                            offerPrice.text.isNotEmpty &&
-                                                    offerPrice.text !=
-                                                        basketPrice!.Price
-                                                            .toString()
-                                                ? const Icon(
-                                                    Icons.discount_rounded,
-                                                    color: Color.fromARGB(
-                                                        255, 0, 175, 6),
-                                                  )
-                                                : const Icon(
-                                                    Icons.discount_rounded,
-                                                  ),
-                                          ],
+                                      Text(
+                                        '${basketPrice?.Price} ${stockDetail!.Currency.Symbol}',
+                                        style: priceText,
+                                      ),
+                                      if (offerPrice.text.isNotEmpty)
+                                        const SizedBox(
+                                          height: 15,
                                         ),
+                                      if (offerPrice.text.isNotEmpty)
+                                        Text(
+                                          "Teklif Fiyatı ${offerPrice.text}",
+                                          style: offerText,
+                                        ),
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(
+                                        "Ayar ${basketPrice?.Carat}",
+                                        style: setText,
+                                        textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(
-                                        height: 5,
+                                        height: 15,
                                       ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            if (offerPrice.text.isEmpty)
-                                              offerPrice.value =
-                                                  offerPrice.value.copyWith(
-                                                text: basketPrice?.Price
-                                                    .toString(),
-                                                selection:
-                                                    TextSelection.collapsed(
-                                                        offset: 6),
-                                              );
-                                            if (offerCarat.text.isEmpty)
-                                              offerCarat.value =
-                                                  offerCarat.value.copyWith(
-                                                text: basketPrice?.Carat
-                                                    .toString(),
-                                                selection:
-                                                    TextSelection.collapsed(
-                                                        offset: 6),
-                                              );
-                                          });
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                updateCaratAndUniitPrice(
-                                                    context),
-                                          ).then(
-                                            (value) => setState(
-                                              () {},
-                                            ),
-                                          );
-                                        },
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Text(
-                                              "Ayar",
-                                              style: setText,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            SizedBox(
-                                              width: 10,
-                                            ),
-                                            Text(
-                                              basketPrice!.Carat.toString(),
-                                              style: setText,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            SizedBox(
-                                              width: 20,
-                                            ),
-                                            offerCarat.text.isNotEmpty &&
-                                                    offerCarat.text !=
-                                                        basketPrice!.Carat
-                                                            .toString()
-                                                ? const Icon(
-                                                    Icons.discount_rounded,
-                                                    color: Color.fromARGB(
-                                                        255, 0, 175, 6),
-                                                  )
-                                                : const Icon(
-                                                    Icons.discount_rounded,
-                                                  ),
-                                          ],
+                                      if (offerCarat.text.isNotEmpty)
+                                        Text(
+                                          "Teklif Ayar ${offerCarat.text}",
+                                          style: offerText,
                                         ),
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        child: ElevatedButton(
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    updateCaratAndUniitPrice(
+                                                        context),
+                                              ).then(
+                                                (value) => setState(
+                                                  () {},
+                                                ),
+                                              );
+                                            },
+                                            child: Text("Teklif")),
                                       ),
                                     ],
                                   ),
@@ -385,7 +307,11 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                   children: [
                     TextFormField(
                       controller: offerPrice,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                      ],
                       obscureText: false,
                       decoration: const InputDecoration(
                         labelText: 'Birim Fiyat',
@@ -399,6 +325,10 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                       controller: offerCarat,
                       obscureText: false,
                       keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Ayar',
                       ),

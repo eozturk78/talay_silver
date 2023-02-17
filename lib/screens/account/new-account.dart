@@ -1,4 +1,6 @@
+import 'package:dropdown_search2/dropdown_search2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/apis/apis.dart';
@@ -51,11 +53,27 @@ class NewAccountState extends State<NewAccountScreen> {
         countries = (value['Countries'] as List)
             .map((e) => Country.fromJson(e))
             .toList();
-        _selectedCountry = countries![0];
-        _selectedCountryCode = countries![0];
+
+        Comparator<Country> sortById =
+            (a, b) => a.CountryName.compareTo(b.CountryName);
+
+        countries?.sort(sortById);
+
+        _selectedCountry = countries!
+            .where((element) => element.CountryName == 'Türkiye')
+            .first;
+        _selectedCountryCode = countries!
+            .where((element) => element.CountryName == 'Türkiye')
+            .first;
+        cities = _selectedCountry?.Cities;
         currencies = (value['Currencies'] as List)
             .map((e) => CurrencyModel.fromJson(e))
             .toList();
+
+        if (currencies!.where((element) => element.IsDefault == 1).isNotEmpty) {
+          _selectedCurrency =
+              currencies!.where((element) => element.IsDefault == 1).first;
+        }
       });
     });
   }
@@ -65,7 +83,7 @@ class NewAccountState extends State<NewAccountScreen> {
     final double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Yeni Müşteri Adayı"),
+        title: const Text("Yeni Müşteri Adayı"),
         leading: leadingWithBack(context),
         shadowColor: null,
         elevation: 0.0,
@@ -117,39 +135,56 @@ class NewAccountState extends State<NewAccountScreen> {
                             children: <Widget>[
                               Container(
                                 decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border(
-                                        bottom: BorderSide(
-                                            width: 1,
-                                            color: Color.fromARGB(
-                                                255, 183, 183, 184)))),
-                                child: Row(
-                                  children: <Widget>[
-                                    PopupMenuButton(
-                                      onSelected: (c) {
-                                        setState(() {
-                                          _selectedCountryCode = c;
-                                        });
-                                      },
-                                      child: Row(
-                                        children: <Widget>[
-                                          Text(
-                                            "+ ${_selectedCountryCode!.AreaCode}",
-                                            style: TextStyle(fontSize: 16),
-                                          ),
-                                          Icon(Icons.arrow_drop_down)
-                                        ],
-                                      ),
-                                      itemBuilder: (context) => countries!
-                                          .map((c) => PopupMenuItem(
-                                              value: c,
-                                              child: Text("+ ${c.AreaCode}")))
-                                          .toList(),
+                                  color: Colors.white,
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      width: 1,
+                                      color: Color.fromARGB(255, 183, 183, 184),
                                     ),
-                                    Flexible(
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      child: DropdownSearch<String>(
+                                        showSearchBox: true,
+                                        items: countries!
+                                            .map((e) =>
+                                                "${e.CountryName} (+${e.AreaCode})")
+                                            .toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedCountry = countries
+                                                ?.where((element) =>
+                                                    element.CountryName ==
+                                                    value)
+                                                .first;
+                                            cities = _selectedCountry?.Cities;
+                                          });
+                                        },
+                                        label: "Telefon Numarası",
+                                        selectedItem:
+                                            "${_selectedCountry?.CountryName} (+${_selectedCountry?.AreaCode})",
+                                        dropdownSearchDecoration:
+                                            const InputDecoration(
+                                          border: InputBorder.none,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: EdgeInsets.only(top: 20),
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
                                       child: TextFormField(
                                         controller: phoneNumberController,
                                         keyboardType: TextInputType.number,
+                                        inputFormatters: <TextInputFormatter>[
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'[0-9]')),
+                                          FilteringTextInputFormatter.digitsOnly
+                                        ],
                                         decoration: InputDecoration(
                                             border: InputBorder.none),
                                       ),
@@ -162,40 +197,62 @@ class NewAccountState extends State<NewAccountScreen> {
                           SizedBox(
                             height: 15,
                           ),
-                          DropdownButton<Country>(
-                            isExpanded: true,
-                            hint: const Text("Ülke"),
-                            items: countries?.map((e) {
-                              return DropdownMenuItem<Country>(
-                                value: e,
-                                child: Text(e.CountryName),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedCountry = value;
-                              });
-                            },
-                            value: _selectedCountry,
+                          Container(
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Color.fromARGB(255, 192, 192, 192),
+                                ),
+                              ),
+                            ),
+                            child: DropdownSearch<String>(
+                              showSearchBox: true,
+                              items:
+                                  countries!.map((e) => e.CountryName).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCountry = countries
+                                      ?.where((element) =>
+                                          element.CountryName == value)
+                                      .first;
+                                  cities = _selectedCountry?.Cities;
+                                });
+                              },
+                              label: "Ülke",
+                              selectedItem: _selectedCountry?.CountryName,
+                              dropdownSearchDecoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
                           ),
                           SizedBox(
                             height: 15,
                           ),
-                          DropdownButton<City>(
-                            isExpanded: true,
-                            hint: const Text("Şehir"),
-                            items: _selectedCountry?.Cities?.map((e) {
-                              return DropdownMenuItem<City>(
-                                value: e,
-                                child: Text(e.CityName),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedCity = value;
-                              });
-                            },
-                            value: _selectedCity,
+                          Container(
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Color.fromARGB(255, 192, 192, 192),
+                                ),
+                              ),
+                            ),
+                            child: DropdownSearch<String>(
+                              showSearchBox: true,
+                              items: cities?.map((e) => e.CityName).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCity = cities
+                                      ?.where((element) =>
+                                          element.CityName == value)
+                                      .first;
+                                });
+                              },
+                              label: "Şehir",
+                              selectedItem: _selectedCity?.CityName,
+                              dropdownSearchDecoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
                           ),
                           SizedBox(
                             height: 15,

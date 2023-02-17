@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dropdown_search2/dropdown_search2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,7 +51,6 @@ class StockDetailScreenState extends State<SearchStockDetailedScreen> {
     setState(() {
       Apis apis = new Apis();
       apis.getSearchStockLookUpData().then((value) {
-        print(value);
         setState(() {
           loaderTags = false;
           tagGroupList =
@@ -77,151 +77,160 @@ class StockDetailScreenState extends State<SearchStockDetailedScreen> {
         actions: headerAction(context),
       ),
       backgroundColor: splashBackGroundColor,
-      body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
-            color: Colors.white,
-          ),
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.6,
-            child: Padding(
-              padding: const EdgeInsets.all(30),
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 25,
-                  ),
-                  GestureDetector(
-                    child: Row(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * 0.78,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.0),
+                  topRight: Radius.circular(30.0),
+                ),
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(30),
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 25,
+                    ),
+                    DropdownSearch<String>(
+                      showSearchBox: true,
+                      items: accountList?.map((e) => e.Title).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _account = accountList
+                              ?.where((element) => element.Title == value)
+                              .first;
+                        });
+                      },
+                      label: "Atölye",
+                      selectedItem: _account?.CityName,
+                    ),
+                    const SizedBox(
+                      height: 25,
+                    ),
+                    Row(
                       children: [
                         Text(
-                          "Bir atölye seç :",
+                          "Etiketler :",
                           style: labelText,
                         ),
-                        const Spacer(
+                        Spacer(
                           flex: 1,
                         ),
-                        if (_account != null) Text(_account!.Title.toString())
+                        Text("")
                       ],
                     ),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => showAccount(context),
-                      ).then(
-                        (value) => setState(
-                          () {},
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(
-                    height: 25,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        "Etiketler :",
-                        style: labelText,
+                    if (loaderTags)
+                      SpinKitCircle(
+                        color: Colors.black,
+                        size: 30.0,
                       ),
-                      Spacer(
-                        flex: 1,
-                      ),
-                      Text("")
-                    ],
-                  ),
-                  if (loaderTags)
-                    SpinKitCircle(
-                      color: Colors.black,
-                      size: 30.0,
-                    ),
-                  if (!loaderTags)
-                    tagGroupList != null
-                        ? ListView.builder(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.all(8),
-                            itemCount: tagGroupList?.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return Container(
-                                height: 50,
-                                child: GestureDetector(
+                    if (!loaderTags)
+                      tagGroupList != null
+                          ? ListView.builder(
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.all(8),
+                              itemCount: tagGroupList?.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Container(
+                                  height: 50,
                                   child: Row(
                                     children: [
                                       Text(tagGroupList![index].TagGroupName),
                                       const Spacer(
                                         flex: 1,
                                       ),
-                                      Text(
-                                        "(" +
-                                            tagGroupList![index]
-                                                .Tags!
-                                                .where((element) =>
-                                                    element.selectedTag == true)
-                                                .length
-                                                .toString() +
-                                            ")",
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _selectedTagGroup =
+                                              tagGroupList![index];
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) =>
+                                                showTags(context),
+                                          ).then(
+                                            (value) => setState(
+                                              () {},
+                                            ),
+                                          );
+                                        },
+                                        child: tagGroupList![index]
+                                                    .Tags!
+                                                    .where((element) =>
+                                                        element.selectedTag ==
+                                                        true)
+                                                    .length !=
+                                                0
+                                            ? Text(
+                                                "(" +
+                                                    tagGroupList![index]
+                                                        .Tags!
+                                                        .where((element) =>
+                                                            element
+                                                                .selectedTag ==
+                                                            true)
+                                                        .length
+                                                        .toString() +
+                                                    ")",
+                                              )
+                                            : Text("Seç"),
                                       )
                                     ],
                                   ),
-                                  onTap: () {
-                                    _selectedTagGroup = tagGroupList![index];
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => showTags(context),
-                                    ).then(
-                                      (value) => setState(
-                                        () {},
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            })
-                        : const Text("Etiket yok"),
-                  const SizedBox(
-                    height: 25,
-                  ),
-                  const SizedBox(
-                    height: 25,
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(40)),
-                    onPressed: () async {
-                      setState(() {
-                        loaderButton = true;
-                      });
-                      SharedPreferences pref =
-                          await SharedPreferences.getInstance();
-                      apis
-                          .searchStock(_account?.AccountId, selectedTags)
-                          .then((value) async {
-                        setState(() {
-                          loaderButton = false;
-                        });
-                        pref.setString("stockList", jsonEncode(value));
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) => StockListScreen())));
-                      });
-                    },
-                    child: loaderButton == false
-                        ? const Text("Ara")
-                        : SpinKitCircle(
-                            color: Colors.white,
-                            size: 30.0,
-                          ),
-                  )
-                ],
+                                );
+                              })
+                          : const Text("Etiket yok"),
+                  ],
+                ),
               ),
             ),
-          )),
+            Container(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * 0.13,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(30),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 68, 68, 68)),
+                  onPressed: () async {
+                    setState(() {
+                      loaderButton = true;
+                    });
+                    SharedPreferences pref =
+                        await SharedPreferences.getInstance();
+                    apis
+                        .searchStock(_account?.AccountId, selectedTags)
+                        .then((value) async {
+                      setState(() {
+                        loaderButton = false;
+                      });
+                      pref.setString("stockList", jsonEncode(value));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) => StockListScreen())));
+                    });
+                  },
+                  child: loaderButton == false
+                      ? const Text("Ara")
+                      : SpinKitCircle(
+                          color: Colors.white,
+                          size: 30.0,
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -317,7 +326,7 @@ class StockDetailScreenState extends State<SearchStockDetailedScreen> {
                 onPressed: () async {
                   Navigator.of(context, rootNavigator: true).pop('dialog');
                 },
-                child: const Text("Gönder"),
+                child: const Text("Tamam"),
               ),
             ),
           ],
