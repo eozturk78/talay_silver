@@ -17,6 +17,7 @@ class BasketDetailModel {
   final String BasketStatusDesc;
   final String PriceType;
   final List<BasketRow> BasketDetails;
+  
   BasketDetailModel({
     required this.BasketId,
     required this.BasketNo,

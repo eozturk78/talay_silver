@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/model/header.dart';
@@ -12,6 +14,8 @@ import 'package:talay_mobile/screens/stock/stock-price-analyse.dart';
 
 import '../../../apis/apis.dart';
 import '../../../colors/constant_colors.dart';
+import '../../../model/currency.dart';
+import '../../../model/price-type.dart';
 import '../../stock-basket/stock-basket-detail.dart';
 
 class SearchStockScreen extends StatefulWidget {
@@ -21,34 +25,53 @@ class SearchStockScreen extends StatefulWidget {
 }
 
 class SearchStockState extends State<SearchStockScreen> {
-  Barcode? result;
+  int? _scanType;
+  Map<String, dynamic> _deviceData = <String, dynamic>{};
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  FocusNode f1 = FocusNode();
+  TextEditingController txtSearchStock = new TextEditingController();
+  String? result;
   QRViewController? controller;
-
+  List<CurrencyModel>? currencyList;
+  List<PriceType>? priceTypeList;
+  CurrencyModel? _selectedCurrency;
+  PriceType? _selectedPriceType;
+  String? redirectedPage;
   bool isRedirected = false;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller!.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller!.resumeCamera();
-    }
-  }
 
   @override
   void initState() {
     // TODO: implement initState
     //startCamera();
     isRedirected = false;
+    getInitPage();
     super.initState();
   }
 
+  getInitPage() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    setState(() {
+      _scanType = androidInfo.model.contains("M3") ? 20 : 10;
+      if (_scanType == 20) {
+        setState(() {
+          FocusScope.of(context).requestFocus(f1);
+        });
+      }
+      redirectedPage = pref.getString("redirectPage")!;
+    });
+  }
+
   startCamera() async {
-    await controller?.resumeCamera();
+    FocusScope.of(context).requestFocus(f1);
+    if (_scanType == 10) {
+      await controller?.resumeCamera();
+    }
   }
 
   @override
@@ -73,7 +96,88 @@ class SearchStockState extends State<SearchStockScreen> {
           ),
           child: Column(
             children: <Widget>[
-              Expanded(flex: 4, child: _buildQrView(context)),
+              if (redirectedPage != "basket")
+                Padding(
+                  padding: EdgeInsets.only(left: 40, right: 40),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DropdownButton<CurrencyModel>(
+                        hint: const Text("Döviz seç"),
+                        items: currencyList?.map((e) {
+                          return DropdownMenuItem<CurrencyModel>(
+                            value: e,
+                            child: Text(e.Symbol),
+                          );
+                        }).toList(),
+                        onChanged: (CurrencyModel? value) async {
+                          SharedPreferences pref =
+                              await SharedPreferences.getInstance();
+                          setState(
+                            () {
+                              if (value != null) {
+                                pref.setString("currencyId", value.CurrencyId);
+                              }
+                              _selectedCurrency = currencyList
+                                  ?.where(
+                                      (element) => element.CurrencyId == value)
+                                  .first;
+                              FocusScope.of(context).requestFocus(f1);
+                            },
+                          );
+                        },
+                        value: _selectedCurrency,
+                      ),
+                      if (redirectedPage != "analyse") Spacer(),
+                      if (redirectedPage != "analyse")
+                        DropdownButton<PriceType>(
+                          hint: Text("Fiyat tipi seç"),
+                          items: priceTypeList?.map((e) {
+                            return DropdownMenuItem<PriceType>(
+                              value: e,
+                              child: Text(e.PriceTypeName),
+                            );
+                          }).toList(),
+                          onChanged: (PriceType? e) {
+                            FocusScope.of(context).requestFocus(f1);
+                          },
+                          value: _selectedPriceType,
+                        ),
+                    ],
+                  ),
+                ),
+              if (_scanType == 10)
+                Expanded(flex: 3, child: _buildQrView(context)),
+              if (_scanType == 20)
+                const Expanded(
+                  flex: 2,
+                  child: Center(
+                    child: Text(
+                      "Lütfen barkodu kullan",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              TextFormField(
+                controller: txtSearchStock,
+                focusNode: f1,
+                onChanged: (value) {
+                  if (value.length > 11) {
+                    result = value.toString().substring(11);
+                  } else {
+                    result = value;
+                  }
+                  txtSearchStock.text = "";
+                  getStockInfo();
+                },
+                showCursor: true,
+                keyboardType: TextInputType.none,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  labelText: '',
+                ),
+              ),
               TextButton(
                   onPressed: () async {
                     controller!.stopCamera();
@@ -114,7 +218,7 @@ class SearchStockState extends State<SearchStockScreen> {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
       setState(() {
-        result = scanData;
+        result = scanData.code;
         getStockInfo();
       });
     });
@@ -124,8 +228,8 @@ class SearchStockState extends State<SearchStockScreen> {
 
   getStockInfo() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    if (result?.code != null) {
-      String code = result?.code ?? "";
+    if (result != null) {
+      String code = result ?? "";
       Apis apis = Apis();
       String? cid = pref.getString("currencyId");
 
@@ -134,6 +238,7 @@ class SearchStockState extends State<SearchStockScreen> {
           (value) {
             pref.setString('stockInfo', jsonEncode(value));
             if (!isRedirected) {
+              controller?.pauseCamera();
               Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -151,6 +256,7 @@ class SearchStockState extends State<SearchStockScreen> {
           (value) {
             pref.setString('stockInfo', jsonEncode(value));
             if (!isRedirected) {
+              controller?.pauseCamera();
               Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -168,6 +274,7 @@ class SearchStockState extends State<SearchStockScreen> {
           (value) {
             pref.setString('stockInfo', jsonEncode(value));
             if (!isRedirected) {
+              controller?.pauseCamera();
               Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -58,6 +58,7 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
         });
       }
       if (basketDetail?.Quantity != null) {
+        print(basketDetail?.Quantity);
         quantityController.value = quantityController.value.copyWith(
           text: basketDetail?.Quantity.toString(),
           selection: TextSelection.collapsed(offset: 6),
@@ -65,19 +66,20 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
       }
       if (basketDetail?.GrossWeight != null) {
         grossController.value = grossController.value.copyWith(
-          text: basketDetail?.GrossWeight.toString(),
+          text: sh.numberFormatter(basketDetail?.GrossWeight),
           selection: TextSelection.collapsed(offset: 6),
         );
       }
       if (basketDetail?.TareWeight != null) {
         tareContoller.value = tareContoller.value.copyWith(
-          text: basketDetail?.TareWeight.toString(),
+          text: sh.numberFormatter(basketDetail?.TareWeight),
           selection: TextSelection.collapsed(offset: 6),
         );
       }
       if (grossController.text.isNotEmpty && tareContoller.text.isNotEmpty) {
-        netWeight = double.parse(grossController.text.toString()) -
-            double.parse(tareContoller.text.toString());
+        netWeight =
+            double.parse(sh.prePareNumberForRequest(grossController.text)) -
+                double.parse(sh.prePareNumberForRequest(tareContoller.text));
       }
     });
   }
@@ -175,14 +177,17 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                 TextFormField(
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                    FilteringTextInputFormatter.allow(RegExp('[0-9,]')),
                   ],
                   controller: grossController,
                   onChanged: (value) {
                     setState(() {
                       if (grossController.text.isNotEmpty) {
-                        netWeight = double.parse(value) -
-                            double.parse(tareContoller.text.toString());
+                        print(value);
+                        netWeight = double.parse(
+                                sh.prePareNumberForRequest(value)) -
+                            double.parse(
+                                sh.prePareNumberForRequest(tareContoller.text));
                       }
                     });
                   },
@@ -211,7 +216,11 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                                 backgroundColor:
                                     MaterialStatePropertyAll<Color>(Colors.red),
                               )
-                            : null,
+                            : const ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll<Color>(
+                                        Color.fromARGB(255, 112, 112, 112)),
+                              ),
                       ),
                       const Text(" "),
                       ElevatedButton(
@@ -226,7 +235,11 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                                 backgroundColor:
                                     MaterialStatePropertyAll<Color>(Colors.red),
                               )
-                            : null,
+                            : const ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll<Color>(
+                                        Color.fromARGB(255, 112, 112, 112)),
+                              ),
                       )
                     ],
                   ),
@@ -236,15 +249,15 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                     keyboardType:
                         TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                      FilteringTextInputFormatter.allow(RegExp('[0-9,]')),
                     ],
                     controller: tareContoller,
                     onChanged: (value) {
                       setState(() {
                         if (grossController.text.isNotEmpty) {
-                          netWeight =
-                              double.parse(grossController.text.toString()) -
-                                  double.parse(value);
+                          netWeight = double.parse(sh.prePareNumberForRequest(
+                                  grossController.text)) -
+                              double.parse(sh.prePareNumberForRequest(value));
                         }
                       });
                     },
@@ -256,6 +269,9 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                 if (_tareType == 20)
                   Column(
                     children: [
+                      SizedBox(
+                        height: 30,
+                      ),
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -273,7 +289,8 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                           });
                         },
                         child: Row(
-                          children: [Icon(Icons.add), Text("Yeni Satır")],
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [Icon(Icons.add), Text("Yeni Dara Paketi")],
                         ),
                       ),
                       DataTable(
@@ -286,8 +303,8 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                             .map(
                               ((element) => DataRow(
                                     cells: <DataCell>[
-                                      DataCell(Text(element.Weight
-                                          .toString())), //Extracting from Map element the value
+                                      DataCell(Text(sh.numberFormatter(element
+                                          .Weight))), //Extracting from Map element the value
                                       DataCell(
                                           Text(element.Quantity.toString())),
                                       DataCell(GestureDetector(
@@ -315,7 +332,7 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                   style: labelText,
                 ),
                 Text(
-                  netWeight.toString(),
+                  sh.numberFormatter(netWeight),
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(
@@ -329,12 +346,20 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                           loaderButton = true;
                         });
                         Apis apis = Apis();
-                        quantity =
-                            double.parse(quantityController.text.toString());
-                        grossWeight =
-                            double.parse(grossController.text.toString());
-                        tareWeight =
-                            double.parse(tareContoller.text.toString());
+                        if (quantityController.text.isNotEmpty) {
+                          quantity =
+                              double.parse(quantityController.text.toString());
+                        }
+
+                        if (grossController.text.isNotEmpty) {
+                          grossWeight = double.parse(
+                              sh.prePareNumberForRequest(grossController.text));
+                        }
+
+                        if (tareContoller.text.isNotEmpty) {
+                          tareWeight = double.parse(
+                              sh.prePareNumberForRequest(tareContoller.text));
+                        }
                         apis
                             .updateBasketDetail(
                                 basketDetail!.BasketDetailId,
@@ -355,7 +380,7 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                         });
                       },
                       child: loaderButton == false
-                          ? const Text("Gönder")
+                          ? const Text("Güncelle")
                           : SpinKitCircle(
                               color: Colors.white,
                               size: 30.0,
@@ -380,22 +405,6 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: detailedWeightController,
-                      keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
-                      ],
-                      obscureText: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Paket Ağırlığı',
-                      ),
-                      validator: (text) => sh.emailValidator(text),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    TextFormField(
                       controller: detailedQuantityController,
                       keyboardType: TextInputType.number,
                       inputFormatters: <TextInputFormatter>[
@@ -408,30 +417,47 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                       ),
                       validator: (text) => sh.textValidator(text),
                     ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    TextFormField(
+                      controller: detailedWeightController,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp('[0-9,]')),
+                      ],
+                      obscureText: false,
+                      decoration: const InputDecoration(
+                        labelText: 'Paket Ağırlığı',
+                      ),
+                      validator: (text) => sh.emailValidator(text),
+                    ),
                     ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             minimumSize: const Size.fromHeight(40)),
                         onPressed: () async {
                           var p = DetailedDare(
-                              Quantity:
-                                  double.parse(detailedQuantityController.text),
-                              Weight:
-                                  double.parse(detailedWeightController.text));
+                              Quantity: int.parse(sh.prePareNumberForRequest(
+                                  detailedQuantityController.text)),
+                              Weight: double.parse(sh.prePareNumberForRequest(
+                                  detailedWeightController.text)));
                           detailedDares.add(p);
 
-                          totalDare +=
-                              double.parse(detailedWeightController.text) *
-                                  double.parse(detailedQuantityController.text);
+                          totalDare += double.parse(sh.prePareNumberForRequest(
+                                  detailedWeightController.text)) *
+                              double.parse(sh.prePareNumberForRequest(
+                                  detailedQuantityController.text));
 
                           tareContoller.value = tareContoller.value.copyWith(
-                            text: totalDare.toString(),
+                            text: sh.numberFormatter(totalDare).toString(),
                             selection: TextSelection.collapsed(offset: 6),
                           );
 
                           if (grossController.text.isNotEmpty) {
-                            netWeight =
-                                double.parse(grossController.text.toString()) -
-                                    totalDare;
+                            netWeight = double.parse(sh.prePareNumberForRequest(
+                                    grossController.text)) -
+                                totalDare;
                           }
 
                           Navigator.of(context, rootNavigator: true)

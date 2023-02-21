@@ -133,7 +133,7 @@ class LoginScreenState extends State<LoginScreen> {
                             } else {
                               pref.clear();
                             }
-                            await apis
+                          await apis
                                 .login(emailController.text,
                                     passwordController.text)
                                 .then((value) {

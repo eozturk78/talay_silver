@@ -8,11 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/model/city.dart';
 
 import '../model/detailed-dare.dart';
+import '../shared/shared.dart';
 import '../toast.dart';
 
 class Apis {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
+  Shared sh = new Shared();
   String lang = 'tr-TR';
   String baseUrl = 'https://talay-api.flepron.com', serviceName = 'Mobile.svc';
   Future login(String email, String password) async {
@@ -25,7 +26,7 @@ class Apis {
   }
 
   Future getStockInfo(
-      String barcode, String? currencyId, String? priceTypeId) async {
+      String? barcode, String? currencyId, String? priceTypeId) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String finalUrl = '$baseUrl/$serviceName/GetStockPriceInfo?c0=$barcode';
     if (priceTypeId != null) finalUrl += '&c1=$priceTypeId';
@@ -261,7 +262,8 @@ class Apis {
     var params = {
       "BasketDetailId": basketDetailId,
       "OfferCarat": caratOffer != "" ? caratOffer : null,
-      "OfferUnitPrice": priceOffer != "" ? priceOffer : null
+      "OfferUnitPrice":
+          priceOffer != "" ? sh.prePareNumberForRequest(priceOffer) : null
     };
     String finalUrl = '$baseUrl/$serviceName/SetBasketDetailOfferValues';
     var result = await http
@@ -333,6 +335,9 @@ class Apis {
         };
       }).toList();
     }
+
+    print(params);
+
     String finalUrl = '$baseUrl/$serviceName/UpdateBasketDetail';
     var result = await http
         .post(Uri.parse(finalUrl), body: jsonEncode(params), headers: {

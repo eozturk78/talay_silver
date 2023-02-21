@@ -13,12 +13,14 @@ import 'package:talay_mobile/screens/baskete-details/stock-tare-gross-weight.dar
 import 'package:talay_mobile/screens/menu.dart';
 
 import '../../apis/apis.dart';
+import '../../model/basket-row.dart';
 import '../../model/currency.dart';
 import '../../model/header.dart';
 import '../../shared/shared.dart';
 import '../../style-model/style-model.dart';
 import '../../toast.dart';
 import '../search-stock/search-stock-price/search-stock-price.dart';
+import '../stock-basket/stock-basket-detail.dart';
 
 class BasketDetailScreen extends StatefulWidget {
   const BasketDetailScreen(Key? key) : super(key: key);
@@ -39,6 +41,12 @@ class BasketDetailState extends State<BasketDetailScreen> {
   TextEditingController offerCarat = new TextEditingController();
   TextEditingController grossWeight = new TextEditingController();
   int _sendType = 10; // --- send to sell 10, send to wait 20
+  FocusNode f1 = FocusNode();
+  TextEditingController txtSearchStock = new TextEditingController();
+  String? result;
+  List<BasketRow>? basketDetailList;
+  final controller = ScrollController();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -49,6 +57,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
   getBasketDetails() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     setState(() {
+      FocusScope.of(context).requestFocus(f1);
       accountTitle = pref.getString("accountTitle");
     });
     Apis apis = Apis();
@@ -56,7 +65,11 @@ class BasketDetailState extends State<BasketDetailScreen> {
     apis.getBasketDetails(pref.getString("basketId")).then((value) {
       setState(() {
         loader = false;
+        print(value['Records'][0]);
         basketDetail = BasketDetailModel.formJson(value['Records'][0]);
+
+        basketDetailList = basketDetail!.BasketDetails;
+
         currencyList = (value['Currencies'] as List)
             .map(
               (e) => CurrencyModel.fromJson(e),
@@ -78,15 +91,15 @@ class BasketDetailState extends State<BasketDetailScreen> {
       double? priceValue = basketDetail?.BasketDetails[index].OfferUnitPrice ??
           basketDetail?.BasketDetails[index].UnitPrice;
       offerPrice.value = offerPrice.value.copyWith(
-        text: priceValue.toString(),
+        text: sh.numberFormatter(priceValue).toString(),
         selection: TextSelection.collapsed(offset: 6),
       );
-      int? caratValue = basketDetail?.BasketDetails[index].OfferCarat ??
+      /* int? caratValue = basketDetail?.BasketDetails[index].OfferCarat ??
           basketDetail?.BasketDetails[index].Carat;
       offerCarat.value = offerCarat.value.copyWith(
         text: caratValue.toString(),
         selection: TextSelection.collapsed(offset: 6),
-      );
+      );*/
       _basketDetailId = basketDetail?.BasketDetails[index].BasketDetailId;
     });
     showDialog(
@@ -99,8 +112,27 @@ class BasketDetailState extends State<BasketDetailScreen> {
     );
   }
 
+  goToChangeDetailed(index) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    // ignore: use_build_context_synchronously
+    Navigator.pushNamed(
+      context,
+      "/stock-tare-gross-weight",
+      arguments: basketDetail?.BasketDetails[index],
+    );
+  }
+
+  _scrollToEnd() {
+    controller.animateTo(
+      controller.position.maxScrollExtent,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 1),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
     return Scaffold(
         appBar: AppBar(
           title: Text("#${basketDetail?.BasketNo} Sepet Detayı"),
@@ -116,6 +148,28 @@ class BasketDetailState extends State<BasketDetailScreen> {
         body: SingleChildScrollView(
             child: Column(
           children: [
+            SizedBox(
+              height: 0,
+              child: TextFormField(
+                controller: txtSearchStock,
+                focusNode: f1,
+                showCursor: true,
+                keyboardType: TextInputType.none,
+                onChanged: (value) {
+                  if (value.length > 11) {
+                    result = value.toString().substring(11);
+                  } else {
+                    result = value;
+                  }
+                  FocusScope.of(context).unfocus();
+                  txtSearchStock.text = "";
+                  getStockInfo();
+                },
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
             Container(
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.6,
@@ -137,7 +191,8 @@ class BasketDetailState extends State<BasketDetailScreen> {
                       ? Padding(
                           padding: EdgeInsets.all(10),
                           child: ListView.builder(
-                              itemCount: basketDetail?.BasketDetails.length,
+                              controller: controller,
+                              itemCount: basketDetailList?.length,
                               shrinkWrap: true,
                               itemBuilder: (BuildContext context, int index) {
                                 return Container(
@@ -239,11 +294,11 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                         style: tableHeader,
                                                       ),
                                                       Spacer(),
-                                                      Text(basketDetail
-                                                              ?.BasketDetails[
-                                                                  index]
-                                                              .UnitPrice
-                                                              .toString() ??
+                                                      Text(sh.numberFormatter(
+                                                              basketDetail
+                                                                  ?.BasketDetails[
+                                                                      index]
+                                                                  .UnitPrice) ??
                                                           ""),
                                                     ],
                                                   ),
@@ -262,19 +317,15 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                         ),
                                                         Spacer(),
                                                         Text(
-                                                          basketDetail
+                                                          sh.numberFormatter(
+                                                              basketDetail
                                                                   ?.BasketDetails[
                                                                       index]
-                                                                  .OfferUnitPrice
-                                                                  .toString() ??
-                                                              "",
+                                                                  .OfferUnitPrice),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                SizedBox(
-                                                  height: 2,
-                                                ),
                                                 SizedBox(
                                                   width: 150,
                                                   child: Row(
@@ -295,30 +346,6 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                     ],
                                                   ),
                                                 ),
-                                                if (basketDetail
-                                                        ?.BasketDetails[index]
-                                                        .OfferCarat !=
-                                                    null)
-                                                  SizedBox(
-                                                    width: 150,
-                                                    child: Row(
-                                                      children: [
-                                                        const Text(
-                                                          "Teklif Ayar",
-                                                          style: tableHeader,
-                                                        ),
-                                                        Spacer(),
-                                                        Text(
-                                                          basketDetail
-                                                                  ?.BasketDetails[
-                                                                      index]
-                                                                  .OfferCarat
-                                                                  .toString() ??
-                                                              "",
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
                                                 SizedBox(
                                                     width: 150,
                                                     height: 25,
@@ -326,147 +353,136 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                         onPressed: () {
                                                           prepareOfferValues(
                                                               index);
+                                                          setState(() {
+                                                            FocusScope.of(
+                                                                    context)
+                                                                .requestFocus(
+                                                                    f1);
+                                                          });
                                                         },
                                                         child: Text("Teklif"))),
                                               ],
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            SharedPreferences pref =
-                                                await SharedPreferences
-                                                    .getInstance();
-                                            // ignore: use_build_context_synchronously
-                                            Navigator.pushNamed(
-                                              context,
-                                              "/stock-tare-gross-weight",
-                                              arguments: basketDetail
-                                                  ?.BasketDetails[index],
-                                            );
-                                          },
-                                          child: Row(
-                                            children: [
-                                              const Text(
-                                                "Miktar",
-                                                style: tableHeader,
-                                              ),
-                                              const Spacer(),
-                                              Text(basketDetail
-                                                          ?.BasketDetails[index]
-                                                          .Quantity !=
-                                                      null
-                                                  ? "${basketDetail?.BasketDetails[index].Quantity.toString()}"
-                                                  : "0"),
-                                              Icon(Icons.edit_outlined)
-                                            ],
+                                        Container(
+                                          transform: Matrix4.translationValues(
+                                              0.0, 0, 0.0),
+                                          child: ElevatedButton(
+                                            style: listButton,
+                                            onPressed: () {
+                                              goToChangeDetailed(index);
+                                            },
+                                            child: Row(
+                                              children: [
+                                                const Text(
+                                                  "Miktar",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                                const Spacer(),
+                                                Text(
+                                                  basketDetail
+                                                              ?.BasketDetails[
+                                                                  index]
+                                                              .Quantity !=
+                                                          null
+                                                      ? "${basketDetail?.BasketDetails[index].Quantity.toString()}"
+                                                      : "0",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            SharedPreferences pref =
-                                                await SharedPreferences
-                                                    .getInstance();
-                                            // ignore: use_build_context_synchronously
-                                            Navigator.pushNamed(
-                                              context,
-                                              "/stock-tare-gross-weight",
-                                              arguments: basketDetail
-                                                  ?.BasketDetails[index],
-                                            );
-                                          },
-                                          child: Row(
-                                            children: [
-                                              const Text(
-                                                "Brüt",
-                                                style: tableHeader,
-                                              ),
-                                              const Spacer(),
-                                              const Text("  "),
-                                              Text(basketDetail
+                                        Container(
+                                          transform: Matrix4.translationValues(
+                                              0.0, -10, 0.0),
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              goToChangeDetailed(index);
+                                            },
+                                            style: listButton,
+                                            child: Row(
+                                              children: [
+                                                const Text(
+                                                  "Brüt",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                                const Spacer(),
+                                                const Text("  "),
+                                                Text(
+                                                  sh.numberFormatter(
+                                                      basketDetail
                                                           ?.BasketDetails[index]
-                                                          .GrossWeight !=
-                                                      null
-                                                  ? "${basketDetail?.BasketDetails[index].GrossWeight.toString()}"
-                                                  : "0"),
-                                              Icon(Icons.edit_outlined)
-                                            ],
+                                                          .GrossWeight),
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            SharedPreferences pref =
-                                                await SharedPreferences
-                                                    .getInstance();
-                                            // ignore: use_build_context_synchronously
-                                            Navigator.pushNamed(
-                                              context,
-                                              "/stock-tare-gross-weight",
-                                              arguments: basketDetail
-                                                  ?.BasketDetails[index],
-                                            );
-                                          },
-                                          child: Row(
-                                            children: [
-                                              const Text(
-                                                "Dara",
-                                                style: tableHeader,
-                                              ),
-                                              const Spacer(),
-                                              const Text("  "),
-                                              Text(basketDetail
+                                        Container(
+                                          transform: Matrix4.translationValues(
+                                              0.0, -20, 0.0),
+                                          child: ElevatedButton(
+                                            style: listButton,
+                                            onPressed: () {
+                                              goToChangeDetailed(index);
+                                            },
+                                            child: Row(
+                                              children: [
+                                                const Text(
+                                                  "Dara",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                                const Spacer(),
+                                                const Text("  "),
+                                                Text(
+                                                  sh.numberFormatter(
+                                                      basketDetail
                                                           ?.BasketDetails[index]
-                                                          .TareWeight !=
-                                                      null
-                                                  ? "${basketDetail?.BasketDetails[index].TareWeight.toString()}"
-                                                  : "0"),
-                                              Icon(Icons.edit_outlined)
-                                            ],
+                                                          .TareWeight),
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            SharedPreferences pref =
-                                                await SharedPreferences
-                                                    .getInstance();
-                                            // ignore: use_build_context_synchronously
-                                            Navigator.pushNamed(
-                                              context,
-                                              "/stock-tare-gross-weight",
-                                              arguments: basketDetail
-                                                  ?.BasketDetails[index],
-                                            );
-                                          },
-                                          child: Row(
-                                            children: [
-                                              const Text(
-                                                "N. Ağırlık",
-                                                style: tableHeader,
-                                              ),
-                                              const Spacer(),
-                                              const Text("  "),
-                                              Text(basketDetail
+                                        Container(
+                                          transform: Matrix4.translationValues(
+                                              0.0, -30, 0.0),
+                                          child: ElevatedButton(
+                                            style: listButton,
+                                            onPressed: () {
+                                              goToChangeDetailed(index);
+                                            },
+                                            child: Row(
+                                              children: [
+                                                const Text(
+                                                  "N. Ağırlık",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                                const Spacer(),
+                                                const Text("  "),
+                                                Text(
+                                                  sh.numberFormatter(
+                                                      basketDetail
                                                           ?.BasketDetails[index]
-                                                          .NetWeight !=
-                                                      null
-                                                  ? "${basketDetail?.BasketDetails[index].NetWeight.toString()}"
-                                                  : "0"),
-                                              Icon(Icons.edit_outlined)
-                                            ],
+                                                          .NetWeight),
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
+                                        )
                                       ],
                                     ),
                                   ),
@@ -493,7 +509,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                 child: Column(
                   children: [
                     Text(
-                      "Müşteri ${accountTitle}",
+                      "Müşteri $accountTitle",
                       style: labelText,
                     ),
                     Row(
@@ -517,6 +533,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                             SharedPreferences pref =
                                 await SharedPreferences.getInstance();
                             setState(() {
+                              FocusScope.of(context).requestFocus(f1);
                               _selectedCurrencyId = value;
                             });
                             Apis apis = Apis();
@@ -575,9 +592,8 @@ class BasketDetailState extends State<BasketDetailScreen> {
                           style: tableHeader,
                         ),
                         const Spacer(),
-                        Text(basketDetail?.TotalGrossWeight != null
-                            ? "${basketDetail?.TotalGrossWeight.toString()}"
-                            : "0"),
+                        Text(
+                            sh.numberFormatter(basketDetail?.TotalGrossWeight)),
                       ],
                     ),
                     const SizedBox(
@@ -590,9 +606,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                           style: tableHeader,
                         ),
                         const Spacer(),
-                        Text(basketDetail?.TotalTareWeight != null
-                            ? "${basketDetail?.TotalTareWeight.toString()}"
-                            : "0"),
+                        Text(sh.numberFormatter(basketDetail?.TotalTareWeight)),
                       ],
                     ),
                     const SizedBox(
@@ -605,9 +619,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                           style: tableHeader,
                         ),
                         const Spacer(),
-                        Text(basketDetail?.TotalNetWeight != null
-                            ? "${basketDetail?.TotalNetWeight.toString()}"
-                            : "0"),
+                        Text(sh.numberFormatter(basketDetail?.TotalNetWeight)),
                       ],
                     ),
                     ElevatedButton(
@@ -617,7 +629,11 @@ class BasketDetailState extends State<BasketDetailScreen> {
                           builder: (context) => sentBasket(context),
                         ).then(
                           (value) => setState(
-                            () {},
+                            () {
+                              setState(() {
+                                FocusScope.of(context).requestFocus(f1);
+                              });
+                            },
                           ),
                         );
                       },
@@ -632,6 +648,27 @@ class BasketDetailState extends State<BasketDetailScreen> {
             ),
           ],
         )));
+  }
+
+  getStockInfo() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    Apis apis = Apis();
+    await apis.getStockBasketPrice(pref.getString("basketId"), result).then(
+      (value) {
+        setState(() {
+          pref.setString('stockInfo', jsonEncode(value));
+          Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const StockBasketDetailScreen()))
+              .then((value) {
+            setState(() {
+              FocusScope.of(context).requestFocus(f1);
+            });
+          });
+        });
+      },
+    );
   }
 
   Widget updateCaratAndUniitPrice(BuildContext context) {
@@ -650,7 +687,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                       keyboardType:
                           TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                        FilteringTextInputFormatter.allow(RegExp('[0-9,]')),
                       ],
                       decoration: const InputDecoration(
                         labelText: 'Birim Fiyat',
@@ -659,19 +696,6 @@ class BasketDetailState extends State<BasketDetailScreen> {
                     ),
                     const SizedBox(
                       height: 20,
-                    ),
-                    TextFormField(
-                      controller: offerCarat,
-                      obscureText: false,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                        FilteringTextInputFormatter.digitsOnly
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: 'Ayar',
-                      ),
-                      validator: (text) => sh.textValidator(text),
                     ),
                     ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -713,7 +737,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                       keyboardType:
                           TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
+                        FilteringTextInputFormatter.allow(RegExp('[0-9,]')),
                       ],
                       decoration: const InputDecoration(
                         labelText: 'Sepet Brüt Ağırlığı',
@@ -783,7 +807,8 @@ class BasketDetailState extends State<BasketDetailScreen> {
                         Apis apis = Apis();
                         double? grossWeightValue;
                         if (grossWeight.text.isNotEmpty) {
-                          grossWeightValue = double.parse(grossWeight.text);
+                          grossWeightValue = double.parse(
+                              sh.prePareNumberForRequest(grossWeight.text));
                         }
                         apis
                             .sendBasketToWaiting(pref.getString("basketId"),
