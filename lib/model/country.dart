@@ -5,6 +5,7 @@ class Country {
   final String CountryName;
   final String? CountryCode;
   final String? AreaCode;
+  final int IsDefault;
   List<City>? Cities;
 
   Country(
@@ -12,6 +13,7 @@ class Country {
       required this.CountryName,
       required this.CountryCode,
       required this.AreaCode,
+      required this.IsDefault,
       this.Cities});
 
   factory Country.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Country {
       CountryCode: json['CountryCode'],
       CountryName: json['CountryName'],
       AreaCode: json['AreaCode'],
+      IsDefault: json['IsDefault'],
       Cities: json['Cities'] != null
           ? (json['Cities'] as List).map((e) => City.formJson(e)).toList()
           : null,

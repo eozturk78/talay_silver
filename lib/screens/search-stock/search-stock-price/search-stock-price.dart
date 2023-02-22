@@ -56,6 +56,32 @@ class SearchStockState extends State<SearchStockScreen> {
     SharedPreferences pref = await SharedPreferences.getInstance();
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    Apis apis = Apis();
+    apis.getCreateBasketLookUpData().then((value) {
+      setState(() {
+        priceTypeList = (value['PriceTypes'] as List)
+            .map(
+              (e) => PriceType.fromJson(e),
+            )
+            .toList();
+        currencyList = (value['Currencies'] as List)
+            .map(
+              (e) => CurrencyModel.fromJson(e),
+            )
+            .toList();
+        if (pref.getString('currencyId') != null) {
+          var cid = pref.getString("currencyId");
+          _selectedCurrency =
+              currencyList?.where((element) => element.CurrencyId == cid).first;
+        }
+        if (pref.getString('priceTypeId') != null) {
+          var ptId = pref.getString("priceTypeId");
+          _selectedPriceType = priceTypeList
+              ?.where((element) => element.PriceTypeId == ptId)
+              .first;
+        }
+      });
+    });
     setState(() {
       _scanType = androidInfo.model.contains("M3") ? 20 : 10;
       if (_scanType == 20) {
@@ -118,10 +144,7 @@ class SearchStockState extends State<SearchStockScreen> {
                               if (value != null) {
                                 pref.setString("currencyId", value.CurrencyId);
                               }
-                              _selectedCurrency = currencyList
-                                  ?.where(
-                                      (element) => element.CurrencyId == value)
-                                  .first;
+                              _selectedCurrency = value;
                               FocusScope.of(context).requestFocus(f1);
                             },
                           );
@@ -138,7 +161,15 @@ class SearchStockState extends State<SearchStockScreen> {
                               child: Text(e.PriceTypeName),
                             );
                           }).toList(),
-                          onChanged: (PriceType? e) {
+                          onChanged: (PriceType? e) async {
+                            SharedPreferences pref =
+                                await SharedPreferences.getInstance();
+                            setState(() {
+                              if (e != null) {
+                                pref.setString("priceTypeId", e.PriceTypeId);
+                              }
+                              _selectedPriceType = e;
+                            });
                             FocusScope.of(context).requestFocus(f1);
                           },
                           value: _selectedPriceType,
@@ -182,10 +213,11 @@ class SearchStockState extends State<SearchStockScreen> {
                   onPressed: () async {
                     controller!.stopCamera();
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: ((context) =>
-                                const SearchStockDetailedScreen())));
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) =>
+                                    const SearchStockDetailedScreen())))
+                        .then((value) => startCamera());
                   },
                   child: const Text("Detaylı Arama")),
             ],

@@ -51,6 +51,7 @@ class CurrencyListState extends State<CurrencyListScreen> {
       ),
       backgroundColor: splashBackGroundColor,
       body: RefreshIndicator(
+        triggerMode: RefreshIndicatorTriggerMode.anywhere,
         onRefresh: () async {
           getCurrencyList();
         },

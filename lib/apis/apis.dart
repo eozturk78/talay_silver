@@ -221,6 +221,17 @@ class Apis {
     return getResponseFromApi(result);
   }
 
+  Future getCreateBasketLookUpData() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String finalUrl = '$baseUrl/$serviceName/GetCreateBasketLookUpData';
+    var result = await http.get(Uri.parse(finalUrl), headers: {
+      'Content-Type': 'application/text',
+      'lang': lang,
+      'token': pref.getString('token').toString()
+    });
+    return getResponseFromApi(result);
+  }
+
   Future getStockBasketPrice(String? basketId, String? barcode) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String finalUrl =

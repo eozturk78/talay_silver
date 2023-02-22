@@ -46,7 +46,8 @@ class NewAccountState extends State<NewAccountScreen> {
     super.initState();
   }
 
-  getCustomerLookUpData() {
+  getCustomerLookUpData() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
     Apis apis = new Apis();
     apis.getCreateCustomerLookUpData().then((value) {
       setState(() {
@@ -59,12 +60,12 @@ class NewAccountState extends State<NewAccountScreen> {
 
         countries?.sort(sortById);
 
-        _selectedCountry = countries!
-            .where((element) => element.CountryName == 'Türkiye')
-            .first;
-        _selectedCountryCode = countries!
-            .where((element) => element.CountryName == 'Türkiye')
-            .first;
+        _selectedCountry =
+            countries!.where((element) => element.IsDefault == 1).first;
+
+        _selectedCountryCode =
+            countries!.where((element) => element.IsDefault == 1).first;
+
         cities = _selectedCountry?.Cities;
         currencies = (value['Currencies'] as List)
             .map((e) => CurrencyModel.fromJson(e))
