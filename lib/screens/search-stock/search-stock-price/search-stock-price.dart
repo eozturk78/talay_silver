@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +51,10 @@ class SearchStockState extends State<SearchStockScreen> {
     isRedirected = false;
     getInitPage();
     super.initState();
+    Future.delayed(
+      Duration(),
+      () => SystemChannels.textInput.invokeMethod('TextInput.hide'),
+    );
   }
 
   getInitPage() async {
@@ -83,7 +88,10 @@ class SearchStockState extends State<SearchStockScreen> {
       });
     });
     setState(() {
-      _scanType = androidInfo.model.contains("M3") ? 20 : 10;
+      _scanType =
+          androidInfo.model.contains("M3") || androidInfo.model.contains("NLS")
+              ? 20
+              : 10;
       if (_scanType == 20) {
         setState(() {
           FocusScope.of(context).requestFocus(f1);
@@ -190,7 +198,8 @@ class SearchStockState extends State<SearchStockScreen> {
                     ),
                   ),
                 ),
-              TextFormField(
+              /*  TextFormField(
+                autofocus: true,
                 controller: txtSearchStock,
                 focusNode: f1,
                 onChanged: (value) {
@@ -199,7 +208,7 @@ class SearchStockState extends State<SearchStockScreen> {
                   } else {
                     result = value;
                   }
-                  txtSearchStock.text = "";
+                  // txtSearchStock.text = "";
                   getStockInfo();
                 },
                 showCursor: true,
@@ -208,10 +217,10 @@ class SearchStockState extends State<SearchStockScreen> {
                   border: InputBorder.none,
                   labelText: '',
                 ),
-              ),
+              ),*/
               TextButton(
                   onPressed: () async {
-                    controller!.stopCamera();
+                    //controller!.stopCamera();
                     Navigator.push(
                             context,
                             MaterialPageRoute(

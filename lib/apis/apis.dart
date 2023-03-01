@@ -29,6 +29,7 @@ class Apis {
       String? barcode, String? currencyId, String? priceTypeId) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String finalUrl = '$baseUrl/$serviceName/GetStockPriceInfo?c0=$barcode';
+    print(finalUrl);
     if (priceTypeId != null) finalUrl += '&c1=$priceTypeId';
     if (currencyId != null) finalUrl += '&c2=$currencyId';
     var result = await http.get(Uri.parse(finalUrl), headers: {

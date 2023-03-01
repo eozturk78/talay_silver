@@ -41,8 +41,7 @@ class BasketRow {
         OfferUnitPrice: json['OfferUnitPrice'],
         Carat: json['Carat'],
         UnitPrice: json['UnitPrice'],
-        Quantity:
-            json['Quantity'] != null ? (json['Quantity'] as double).toInt() : 0,
+        Quantity: json['Quantity'] != null ? (json['Quantity']).toInt() : 0,
         GrossWeight: json['GrossWeight'],
         TareWeight: json['TareWeight'],
         NetWeight: json['NetWeight'],
