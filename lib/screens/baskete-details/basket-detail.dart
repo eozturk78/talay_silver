@@ -5,12 +5,14 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_barcode_listener/flutter_barcode_listener.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/colors/constant_colors.dart';
 import 'package:talay_mobile/model/basket-detail-model.dart';
 import 'package:talay_mobile/screens/baskete-details/stock-tare-gross-weight.dart';
 import 'package:talay_mobile/screens/menu.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../apis/apis.dart';
 import '../../model/basket-row.dart';
@@ -46,7 +48,9 @@ class BasketDetailState extends State<BasketDetailScreen> {
   String? result;
   List<BasketRow>? basketDetailList;
   final controller = ScrollController();
-
+  String? basketDetailId;
+  late int deletedIndex;
+  late int deleteType = 10;
   @override
   void initState() {
     // TODO: implement initState
@@ -136,7 +140,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text("#${basketDetail?.BasketNo} Sepet Detayı"),
-          leading: leadingWithBack(context),
+          leading: leading(context),
           shadowColor: null,
           elevation: 0.0,
           bottomOpacity: 0,
@@ -150,23 +154,48 @@ class BasketDetailState extends State<BasketDetailScreen> {
           children: [
             SizedBox(
               height: 0,
+              child: VisibilityDetector(
+                onVisibilityChanged: (VisibilityInfo info) {},
+                key: Key('visible-detector-key'),
+                child: BarcodeKeyboardListener(
+                  bufferDuration: Duration(milliseconds: 200),
+                  onBarcodeScanned: (barcode) {
+                    print(barcode);
+                    if (barcode.length == 11) {
+                      setState(() {
+                        result = barcode;
+                        getStockInfo();
+                      });
+                    }
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 1,
               child: TextFormField(
                 controller: txtSearchStock,
                 focusNode: f1,
-                showCursor: true,
-                keyboardType: TextInputType.none,
                 onChanged: (value) {
                   if (value.length > 11) {
                     result = value.toString().substring(11);
-                  } else {
+                    getStockInfo();
+                  } else if (value.length == 11) {
                     result = value;
+                    getStockInfo();
                   }
-                  FocusScope.of(context).unfocus();
                   txtSearchStock.text = "";
-                  getStockInfo();
                 },
+                showCursor: true,
+                keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
+                  labelText: '',
                 ),
               ),
             ),
@@ -222,25 +251,57 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                       255, 202, 8, 73)),
                                             ),
                                             Spacer(),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                Apis apis = Apis();
-                                                apis
-                                                    .deleteBasketDetail(
+                                            SizedBox(
+                                              width: 50,
+                                              height: 30,
+                                              child: MaterialButton(
+                                                padding: EdgeInsets.only(
+                                                    left: 0, right: 0),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    deletedIndex = index;
+                                                    basketDetailId =
                                                         basketDetail
                                                             ?.BasketDetails[
                                                                 index]
-                                                            .BasketDetailId)
-                                                    .then((value) {
-                                                  setState(() {
-                                                    basketDetail?.BasketDetails
-                                                        .removeAt(index);
+                                                            .BasketDetailId;
                                                   });
-                                                });
-                                              },
-                                              child: Icon(
-                                                  Icons.delete_outline_sharp),
-                                            )
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        areYouSure(context),
+                                                  ).then(
+                                                    (value) => setState(
+                                                      () {
+                                                        Apis apis = Apis();
+                                                        apis
+                                                            .deleteBasketDetail(
+                                                                basketDetailId)
+                                                            .then((value) {
+                                                          setState(() {
+                                                            if (deleteType ==
+                                                                20) {
+                                                              basketDetail
+                                                                  ?.BasketDetails
+                                                                  .removeAt(
+                                                                      deletedIndex);
+                                                            }
+                                                          });
+                                                        });
+                                                        setState(() {
+                                                          FocusScope.of(context)
+                                                              .requestFocus(f1);
+                                                        });
+                                                      },
+                                                    ),
+                                                  );
+                                                },
+                                                child: Icon(
+                                                  Icons.delete,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                         Row(
@@ -270,7 +331,7 @@ class BasketDetailState extends State<BasketDetailScreen> {
                                                   MainAxisAlignment.start,
                                               children: [
                                                 SizedBox(
-                                                  width: 200,
+                                                  width: 150,
                                                   child: Text(
                                                     "${basketDetail?.BasketDetails[index].StockName.toString()}",
                                                     overflow:
@@ -820,6 +881,44 @@ class BasketDetailState extends State<BasketDetailScreen> {
                         });
                       },
                       child: Text('Gönder'),
+                    ),
+                  ],
+                ),
+              ));
+        }));
+  }
+
+  Widget areYouSure(BuildContext context) {
+    return AlertDialog(
+        title: Text("Devam stediğinizden emin misiniz?"),
+        content: StatefulBuilder(builder: (BuildContext context, setState) {
+          return FittedBox(
+              fit: BoxFit.none,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.7,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        deleteType = 20;
+                        Navigator.of(context, rootNavigator: false)
+                            .pop('dialog');
+                      },
+                      child: Text('Evet'),
+                    ),
+                    Text("  "),
+                    ElevatedButton(
+                      onPressed: () {
+                        deleteType = 10;
+                        Navigator.of(context, rootNavigator: false)
+                            .pop('dialog');
+                      },
+                      style: const ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll<Color>(
+                            Color.fromARGB(255, 133, 132, 132)),
+                      ),
+                      child: Text('Hayır'),
                     ),
                   ],
                 ),

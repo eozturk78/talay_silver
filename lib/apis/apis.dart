@@ -15,7 +15,7 @@ class Apis {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   Shared sh = new Shared();
   String lang = 'tr-TR';
-  String baseUrl = 'https://talay-api.flepron.com', serviceName = 'Mobile.svc';
+  String baseUrl = 'https://dev-api.talayerp.com', serviceName = 'Mobile.svc';
   Future login(String email, String password) async {
     String finalUrl = '$baseUrl/$serviceName/Login';
     var params = {'UserId': email.toString(), 'Password': password.toString()};
@@ -27,17 +27,18 @@ class Apis {
 
   Future getStockInfo(
       String? barcode, String? currencyId, String? priceTypeId) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String finalUrl = '$baseUrl/$serviceName/GetStockPriceInfo?c0=$barcode';
-    print(finalUrl);
-    if (priceTypeId != null) finalUrl += '&c1=$priceTypeId';
-    if (currencyId != null) finalUrl += '&c2=$currencyId';
-    var result = await http.get(Uri.parse(finalUrl), headers: {
-      'Content-Type': 'application/text',
-      'lang': lang,
-      'token': pref.getString('token').toString()
-    });
-    return getResponseFromApi(result);
+    if (barcode?.length != 9) {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      String finalUrl = '$baseUrl/$serviceName/GetStockPriceInfo?c0=$barcode';
+      if (priceTypeId != null) finalUrl += '&c1=$priceTypeId';
+      if (currencyId != null) finalUrl += '&c2=$currencyId';
+      var result = await http.get(Uri.parse(finalUrl), headers: {
+        'Content-Type': 'application/text',
+        'lang': lang,
+        'token': pref.getString('token').toString()
+      });
+      return getResponseFromApi(result);
+    }
   }
 
   Future getBasketDetails(String? basketId) async {
@@ -52,15 +53,18 @@ class Apis {
   }
 
   Future getStockPriceAnalysis(String barcode, String? currencyId) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String finalUrl = '$baseUrl/$serviceName/GetStockPriceAnalysis?c0=$barcode';
-    if (currencyId != null) finalUrl += '&c1=$currencyId';
-    var result = await http.get(Uri.parse(finalUrl), headers: {
-      'Content-Type': 'application/text',
-      'lang': lang,
-      'token': pref.getString('token').toString()
-    });
-    return getResponseFromApi(result);
+    if (barcode.length != 9) {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      String finalUrl =
+          '$baseUrl/$serviceName/GetStockPriceAnalysis?c0=$barcode';
+      if (currencyId != null) finalUrl += '&c1=$currencyId';
+      var result = await http.get(Uri.parse(finalUrl), headers: {
+        'Content-Type': 'application/text',
+        'lang': lang,
+        'token': pref.getString('token').toString()
+      });
+      return getResponseFromApi(result);
+    }
   }
 
   Future getCurrencyList() async {
@@ -237,6 +241,7 @@ class Apis {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String finalUrl =
         '$baseUrl/$serviceName/GetStockBasketPrice?c0=$basketId&c1=$barcode';
+    print(finalUrl);
     var result = await http.get(Uri.parse(finalUrl), headers: {
       'Content-Type': 'application/text',
       'lang': lang,

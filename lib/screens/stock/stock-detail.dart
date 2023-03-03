@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_listener/flutter_barcode_listener.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/colors/constant_colors.dart';
 import 'package:talay_mobile/model/currency.dart';
@@ -10,6 +11,7 @@ import 'package:talay_mobile/model/stock-detail.dart';
 import 'package:talay_mobile/shared/shared.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:talay_mobile/apis/apis.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/file.dart';
 import '../../style-model/style-model.dart';
@@ -141,24 +143,48 @@ class StockDetailScreenState extends State<StockDetailScreen> {
             children: [
               SizedBox(
                 height: 1,
+                child: VisibilityDetector(
+                  onVisibilityChanged: (VisibilityInfo info) {},
+                  key: Key('visible-detector-key'),
+                  child: BarcodeKeyboardListener(
+                    bufferDuration: Duration(milliseconds: 200),
+                    onBarcodeScanned: (barcode) {
+                      print(barcode);
+                      if (barcode.length == 11) {
+                        setState(() {
+                          result = barcode;
+                          onChangePriceByCurrencyPriceType();
+                        });
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 1,
                 child: TextFormField(
                   controller: txtSearchStock,
                   focusNode: f1,
-                  showCursor: false,
-                  keyboardType: TextInputType.none,
                   onChanged: (value) {
                     if (value.length > 11) {
                       result = value.toString().substring(11);
-                    } else {
+                      onChangePriceByCurrencyPriceType();
+                    } else if (value.length == 11) {
                       result = value;
+                      onChangePriceByCurrencyPriceType();
                     }
-                    FocusScope.of(context).unfocus();
-
                     txtSearchStock.text = "";
-                    onChangePriceByCurrencyPriceType();
                   },
+                  showCursor: true,
+                  keyboardType: TextInputType.none,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
+                    labelText: '',
                   ),
                 ),
               ),

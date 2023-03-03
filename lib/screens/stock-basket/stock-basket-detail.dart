@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_barcode_listener/flutter_barcode_listener.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/colors/constant_colors.dart';
 import 'package:talay_mobile/model/basket-price.dart';
@@ -13,6 +14,7 @@ import 'package:talay_mobile/model/stock-variants.dart';
 import 'package:talay_mobile/screens/baskete-details/basket-detail.dart';
 import 'package:talay_mobile/shared/shared.dart';
 import 'package:talay_mobile/apis/apis.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/file.dart';
 import '../../style-model/style-model.dart';
@@ -210,28 +212,52 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                   children: [
                     SizedBox(
                       height: 1,
+                      child: VisibilityDetector(
+                        onVisibilityChanged: (VisibilityInfo info) {},
+                        key: Key('visible-detector-key'),
+                        child: BarcodeKeyboardListener(
+                          bufferDuration: Duration(milliseconds: 200),
+                          onBarcodeScanned: (barcode) {
+                            if (barcode.length == 11) {
+                              setState(() {
+                                result = barcode;
+                                getStockInfo();
+                              });
+                            }
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 1,
                       child: TextFormField(
                         controller: txtSearchStock,
                         focusNode: f1,
-                        showCursor: false,
-                        keyboardType: TextInputType.none,
                         onChanged: (value) {
                           if (value.length > 11) {
                             result = value.toString().substring(11);
-                          } else {
+                            getStockInfo();
+                          } else if (value.length == 11) {
                             result = value;
+                            getStockInfo();
                           }
-                          FocusScope.of(context).unfocus();
                           txtSearchStock.text = "";
-                          getStockInfo();
                         },
+                        showCursor: false,
+                        keyboardType: TextInputType.none,
                         decoration: const InputDecoration(
                           border: InputBorder.none,
+                          labelText: '',
                         ),
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(15),
+                      padding: EdgeInsets.only(right: 15, left: 15),
                       child: ElevatedButton(
                         onPressed: () async {
                           if (stockDetail != null) {
@@ -287,7 +313,7 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                     if (stockDetail != null &&
                         stockDetail!.StockVariants?.isNotEmpty != false)
                       Padding(
-                        padding: EdgeInsets.all(15),
+                        padding: EdgeInsets.only(right: 15, left: 15),
                         child: ElevatedButton(
                           onPressed: () async {
                             SharedPreferences pref =
@@ -321,7 +347,7 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
                               backgroundColor: Color.fromARGB(255, 63, 63, 63)),
                           child: const Text("Stok Varyantları"),
                         ),
-                      )
+                      ),
                   ],
                 ),
               ),
@@ -336,7 +362,6 @@ class StockBasketDetailScreenState extends State<StockBasketDetailScreen> {
       (value) {
         setState(() {
           pref.setString('stockInfo', jsonEncode(value));
-
           Navigator.push(
                   context,
                   MaterialPageRoute(

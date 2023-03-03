@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:input_with_keyboard_control/input_with_keyboard_control.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talay_mobile/model/header.dart';
@@ -18,6 +19,8 @@ import '../../../colors/constant_colors.dart';
 import '../../../model/currency.dart';
 import '../../../model/price-type.dart';
 import '../../stock-basket/stock-basket-detail.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+import 'package:flutter_barcode_listener/flutter_barcode_listener.dart';
 
 class SearchStockScreen extends StatefulWidget {
   SearchStockScreen({Key? key}) : super(key: key);
@@ -32,6 +35,7 @@ class SearchStockState extends State<SearchStockScreen> {
   FocusNode f1 = FocusNode();
   TextEditingController txtSearchStock = new TextEditingController();
   String? result;
+  late bool visible;
   QRViewController? controller;
   List<CurrencyModel>? currencyList;
   List<PriceType>? priceTypeList;
@@ -51,10 +55,6 @@ class SearchStockState extends State<SearchStockScreen> {
     isRedirected = false;
     getInitPage();
     super.initState();
-    Future.delayed(
-      Duration(),
-      () => SystemChannels.textInput.invokeMethod('TextInput.hide'),
-    );
   }
 
   getInitPage() async {
@@ -92,17 +92,15 @@ class SearchStockState extends State<SearchStockScreen> {
           androidInfo.model.contains("M3") || androidInfo.model.contains("NLS")
               ? 20
               : 10;
-      if (_scanType == 20) {
-        setState(() {
-          FocusScope.of(context).requestFocus(f1);
-        });
-      }
+
+      setState(() {
+        FocusScope.of(context).requestFocus(f1);
+      });
       redirectedPage = pref.getString("redirectPage")!;
     });
   }
 
   startCamera() async {
-    FocusScope.of(context).requestFocus(f1);
     if (_scanType == 10) {
       await controller?.resumeCamera();
     }
@@ -188,6 +186,10 @@ class SearchStockState extends State<SearchStockScreen> {
               if (_scanType == 10)
                 Expanded(flex: 3, child: _buildQrView(context)),
               if (_scanType == 20)
+                Column(
+                  children: [],
+                ),
+              if (_scanType == 20)
                 const Expanded(
                   flex: 2,
                   child: Center(
@@ -198,26 +200,54 @@ class SearchStockState extends State<SearchStockScreen> {
                     ),
                   ),
                 ),
-              /*  TextFormField(
-                autofocus: true,
-                controller: txtSearchStock,
-                focusNode: f1,
-                onChanged: (value) {
-                  if (value.length > 11) {
-                    result = value.toString().substring(11);
-                  } else {
-                    result = value;
-                  }
-                  // txtSearchStock.text = "";
-                  getStockInfo();
-                },
-                showCursor: true,
-                keyboardType: TextInputType.none,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  labelText: '',
+              if (_scanType == 20)
+                VisibilityDetector(
+                  onVisibilityChanged: (VisibilityInfo info) {
+                    visible = info.visibleFraction > 0;
+                  },
+                  key: Key('visible-detector-key'),
+                  child: BarcodeKeyboardListener(
+                    bufferDuration: Duration(milliseconds: 200),
+                    onBarcodeScanned: (barcode) {
+                      if (barcode.length == 11) {
+                        print(
+                            "======================================== $barcode");
+                        setState(() {
+                          result = barcode;
+                          //getStockInfo();
+                        });
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[],
+                    ),
+                  ),
                 ),
-              ),*/
+              SizedBox(
+                height: 1,
+                child: TextFormField(
+                  controller: txtSearchStock,
+                  focusNode: f1,
+                  onChanged: (value) {
+                    if (value.length > 11) {
+                      result = value.toString().substring(11);
+                      getStockInfo();
+                    } else if (value.length == 11) {
+                      result = value;
+                      getStockInfo();
+                    }
+                    txtSearchStock.text = "";
+                  },
+                  showCursor: true,
+                  keyboardType: TextInputType.none,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    labelText: '',
+                  ),
+                ),
+              ),
               TextButton(
                   onPressed: () async {
                     //controller!.stopCamera();

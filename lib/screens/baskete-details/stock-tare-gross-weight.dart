@@ -272,8 +272,8 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                       SizedBox(
                         height: 30,
                       ),
-                      GestureDetector(
-                        onTap: () {
+                      ElevatedButton(
+                        onPressed: () {
                           setState(() {
                             detailedWeightController.clear();
                             detailedQuantityController.clear();
@@ -288,9 +288,24 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                             );
                           });
                         },
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.white,
+                            shadowColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 20),
+                            textStyle: TextStyle(color: Colors.black)),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [Icon(Icons.add), Text("Yeni Dara Paketi")],
+                          children: [
+                            Icon(
+                              Icons.add,
+                              color: Colors.black,
+                            ),
+                            Text(
+                              "Yeni Dara Paketi",
+                              style: TextStyle(color: Colors.black),
+                            )
+                          ],
                         ),
                       ),
                       DataTable(
@@ -307,16 +322,26 @@ class StockTareGrossWeightState extends State<StockTareGrossWeightScreen> {
                                           .Weight))), //Extracting from Map element the value
                                       DataCell(
                                           Text(element.Quantity.toString())),
-                                      DataCell(GestureDetector(
-                                        onTap: (() {
-                                          setState(() {
-                                            totalDare -= element.Quantity *
-                                                element.Weight;
-                                            detailedDares.remove(element);
-                                          });
-                                        }),
-                                        child: Icon(Icons.delete),
-                                      )),
+                                      DataCell(
+                                        SizedBox(
+                                          width: 50,
+                                          child: MaterialButton(
+                                            padding: EdgeInsets.only(
+                                                left: 0, right: 0),
+                                            onPressed: () {
+                                              setState(() {
+                                                totalDare -= element.Quantity *
+                                                    element.Weight;
+                                                detailedDares.remove(element);
+                                              });
+                                            },
+                                            child: Icon(
+                                              Icons.delete,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   )),
                             )
